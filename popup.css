@@ -1,0 +1,317 @@
+/* Steam Spending Analyzer - Popup Styles */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #c7d5e0;
+  background: linear-gradient(135deg, #1b2838 0%, #171a21 100%);
+  min-width: 400px;
+  max-width: 450px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.container {
+  padding: 16px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2a475e;
+}
+
+header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #66c0f4;
+  text-shadow: 0 0 10px rgba(102, 192, 244, 0.3);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #2a475e;
+  border-top-color: #66c0f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.error {
+  text-align: center;
+  padding: 30px 20px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.error a {
+  color: #66c0f4;
+  text-decoration: none;
+}
+
+.error a:hover {
+  text-decoration: underline;
+}
+
+.error .hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #8f98a0;
+}
+
+/* Stats Sections */
+.section {
+  margin-bottom: 20px;
+}
+
+.section h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #66c0f4;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Stat Grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.stat-card {
+  background: rgba(42, 71, 94, 0.4);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #2a475e;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card.primary {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(102, 192, 244, 0.2) 0%, rgba(42, 71, 94, 0.4) 100%);
+  border-color: #66c0f4;
+}
+
+.stat-label {
+  display: block;
+  font-size: 11px;
+  color: #8f98a0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.stat-value.small {
+  font-size: 14px;
+}
+
+.stat-value.positive {
+  color: #5ba32b;
+}
+
+.stat-card.primary .stat-value {
+  font-size: 28px;
+  color: #66c0f4;
+}
+
+/* Breakdown Lists */
+.breakdown-list {
+  background: rgba(42, 71, 94, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2a475e;
+}
+
+.breakdown-list.collapsed {
+  display: none;
+}
+
+.breakdown-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(42, 71, 94, 0.5);
+  gap: 8px;
+}
+
+.breakdown-item:last-child {
+  border-bottom: none;
+}
+
+.breakdown-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(102, 192, 244, 0.2) 0%, rgba(102, 192, 244, 0.05) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.breakdown-label {
+  flex: 1;
+  font-size: 13px;
+  color: #c7d5e0;
+  z-index: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breakdown-value {
+  font-weight: 600;
+  color: #fff;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.breakdown-count {
+  font-size: 11px;
+  color: #8f98a0;
+  z-index: 1;
+}
+
+.breakdown-date {
+  font-size: 11px;
+  color: #8f98a0;
+  z-index: 1;
+}
+
+/* Collapsible Sections */
+.collapsible .collapse-toggle {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(42, 71, 94, 0.3);
+  border-radius: 8px;
+  margin-bottom: 0;
+  transition: background 0.2s;
+}
+
+.collapsible .collapse-toggle:hover {
+  background: rgba(42, 71, 94, 0.5);
+}
+
+.toggle-icon {
+  font-size: 10px;
+  color: #8f98a0;
+  transition: transform 0.2s;
+}
+
+/* Export Buttons */
+.export-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.export-btn:first-of-type {
+  background: linear-gradient(135deg, #66c0f4 0%, #4a9eda 100%);
+  color: #1b2838;
+}
+
+.export-btn:first-of-type:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 192, 244, 0.4);
+}
+
+.export-btn.secondary {
+  background: rgba(42, 71, 94, 0.6);
+  color: #c7d5e0;
+  border: 1px solid #2a475e;
+}
+
+.export-btn.secondary:hover {
+  background: rgba(42, 71, 94, 0.8);
+}
+
+/* Fun Facts */
+.fun-facts {
+  background: rgba(42, 71, 94, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #2a475e;
+}
+
+.fun-fact {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(42, 71, 94, 0.5);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.fun-fact:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.fun-fact strong {
+  color: #66c0f4;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1b2838;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a475e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3d6a8a;
+}

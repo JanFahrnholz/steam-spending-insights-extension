@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Steam Spending Analyzer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Steam Spending Analyzer</h1>
+    </header>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Analyzing transactions...</p>
+    </div>
+
+    <div id="error" class="error hidden">
+      <p>Please navigate to your <a href="https://store.steampowered.com/account/history/" target="_blank">Steam Purchase History</a> page first.</p>
+      <p class="hint">Make sure to scroll down to load all transactions you want to analyze.</p>
+    </div>
+
+    <div id="stats" class="stats hidden">
+      <!-- Overview Section -->
+      <section class="section">
+        <h2>Overview</h2>
+        <div class="stat-grid">
+          <div class="stat-card primary">
+            <span class="stat-label">Total Spent</span>
+            <span class="stat-value" id="totalSpent">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Transactions</span>
+            <span class="stat-value" id="totalTransactions">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Wallet Funded</span>
+            <span class="stat-value" id="walletFunded">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Refunds</span>
+            <span class="stat-value positive" id="totalRefunds">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Money Flow Section -->
+      <section class="section">
+        <h2>Money Flow</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span class="stat-label">Game Purchases</span>
+            <span class="stat-value" id="gamePurchases">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">In-Game Purchases</span>
+            <span class="stat-value" id="inGamePurchases">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Market Spent</span>
+            <span class="stat-value" id="marketSpent">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Market Earned</span>
+            <span class="stat-value positive" id="marketEarned">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gift Stats -->
+      <section class="section">
+        <h2>Gifts</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span class="stat-label">Gifts Sent</span>
+            <span class="stat-value" id="giftsSent">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Gift Value</span>
+            <span class="stat-value" id="giftValue">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Averages Section -->
+      <section class="section">
+        <h2>Averages & Extremes</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span class="stat-label">Average Purchase</span>
+            <span class="stat-value" id="avgPurchase">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Median Purchase</span>
+            <span class="stat-value" id="medianPurchase">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Largest Purchase</span>
+            <span class="stat-value" id="largestPurchase">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Smallest Purchase</span>
+            <span class="stat-value" id="smallestPurchase">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Time-based Stats -->
+      <section class="section">
+        <h2>Time Analysis</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span class="stat-label">First Purchase</span>
+            <span class="stat-value small" id="firstPurchase">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Latest Purchase</span>
+            <span class="stat-value small" id="latestPurchase">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Avg per Month</span>
+            <span class="stat-value" id="avgPerMonth">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Avg per Year</span>
+            <span class="stat-value" id="avgPerYear">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Account Age</span>
+            <span class="stat-value small" id="accountAge">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Days Between Purchases</span>
+            <span class="stat-value" id="avgDaysBetween">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Spending by Year -->
+      <section class="section">
+        <h2>Spending by Year</h2>
+        <div id="yearlyStats" class="breakdown-list"></div>
+      </section>
+
+      <!-- Spending by Month -->
+      <section class="section collapsible">
+        <h2 class="collapse-toggle">Spending by Month <span class="toggle-icon">▼</span></h2>
+        <div id="monthlyStats" class="breakdown-list collapsed"></div>
+      </section>
+
+      <!-- Spending by Game -->
+      <section class="section collapsible">
+        <h2 class="collapse-toggle">Top Games by Spending <span class="toggle-icon">▼</span></h2>
+        <div id="gameStats" class="breakdown-list collapsed"></div>
+      </section>
+
+      <!-- Transaction Types -->
+      <section class="section collapsible">
+        <h2 class="collapse-toggle">Transaction Types <span class="toggle-icon">▼</span></h2>
+        <div id="typeStats" class="breakdown-list collapsed"></div>
+      </section>
+
+      <!-- Payment Methods -->
+      <section class="section collapsible">
+        <h2 class="collapse-toggle">Payment Methods <span class="toggle-icon">▼</span></h2>
+        <div id="paymentStats" class="breakdown-list collapsed"></div>
+      </section>
+
+      <!-- Day of Week Analysis -->
+      <section class="section collapsible">
+        <h2 class="collapse-toggle">Spending by Day of Week <span class="toggle-icon">▼</span></h2>
+        <div id="dayOfWeekStats" class="breakdown-list collapsed"></div>
+      </section>
+
+      <!-- Hour of Day Analysis -->
+      <section class="section collapsible">
+        <h2 class="collapse-toggle">Spending by Month of Year <span class="toggle-icon">▼</span></h2>
+        <div id="monthOfYearStats" class="breakdown-list collapsed"></div>
+      </section>
+
+      <!-- Gift Recipients -->
+      <section class="section collapsible">
+        <h2 class="collapse-toggle">Gift Recipients <span class="toggle-icon">▼</span></h2>
+        <div id="giftRecipientStats" class="breakdown-list collapsed"></div>
+      </section>
+
+      <!-- Top Purchases -->
+      <section class="section collapsible">
+        <h2 class="collapse-toggle">Top 10 Largest Purchases <span class="toggle-icon">▼</span></h2>
+        <div id="topPurchases" class="breakdown-list collapsed"></div>
+      </section>
+
+      <!-- Spending Streaks -->
+      <section class="section">
+        <h2>Fun Facts</h2>
+        <div id="funFacts" class="fun-facts"></div>
+      </section>
+
+      <!-- Export Button -->
+      <section class="section">
+        <button id="exportBtn" class="export-btn">Export Data as JSON</button>
+        <button id="exportCsvBtn" class="export-btn secondary">Export as CSV</button>
+      </section>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

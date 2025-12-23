@@ -1,0 +1,1 @@
+"# steam-spending-insights-extension" 

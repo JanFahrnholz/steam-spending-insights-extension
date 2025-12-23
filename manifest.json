@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Steam Spending Insights",
+  "version": "1.0",
+  "description": "Analyze your Steam purchase history with detailed statistics",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://store.steampowered.com/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://store.steampowered.com/account/history",
+        "https://store.steampowered.com/account/history/",
+        "https://store.steampowered.com/account/history/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
