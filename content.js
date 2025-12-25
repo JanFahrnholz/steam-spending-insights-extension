@@ -415,6 +415,21 @@
       allSpending.filter(t => t.gameName && !t.isMarketTransaction).map(t => t.gameName)
     ).size;
 
+    // Calculate profit metrics
+    const profitMetrics = calculateProfitMetrics(
+      transactions, marketSales, marketPurchases,
+      totalMarketSpent, totalMarketEarned, marketNet
+    );
+
+    // Calculate comparative metrics
+    const comparativeMetrics = calculateComparativeMetrics(transactions, allSpending);
+
+    // Calculate game profit breakdown
+    const gameProfitData = calculateGameProfitBreakdown(
+      transactions, gamePurchases, inGamePurchases,
+      marketSales, marketPurchases
+    );
+
     return {
       currency,
       totalSpent,
@@ -454,8 +469,253 @@
       uniqueGames,
       allSpending,
       gamePurchases,
-      giftPurchases
+      giftPurchases,
+      profitMetrics,
+      comparativeMetrics,
+      gameProfitData,
+      marketSales,
+      marketPurchases,
+      inGamePurchases
     };
+  }
+
+  function calculateProfitMetrics(transactions, marketSales, marketPurchases, totalMarketSpent, totalMarketEarned, marketNet) {
+    const totalMarketTransactions = marketSales.length + marketPurchases.length;
+
+    // Win rate (percentage of sales vs total market transactions)
+    const winRate = totalMarketTransactions > 0
+      ? (marketSales.length / totalMarketTransactions) * 100
+      : 0;
+
+    // Average profit per sale
+    const avgProfitPerSale = marketSales.length > 0
+      ? totalMarketEarned / marketSales.length
+      : 0;
+
+    // Average cost per purchase
+    const avgCostPerPurchase = marketPurchases.length > 0
+      ? totalMarketSpent / marketPurchases.length
+      : 0;
+
+    // ROI percentage
+    const roi = totalMarketSpent > 0
+      ? (marketNet / totalMarketSpent) * 100
+      : 0;
+
+    // Breakeven ratio (how much to earn per €1 spent)
+    const breakevenRatio = totalMarketEarned > 0
+      ? totalMarketSpent / totalMarketEarned
+      : 0;
+
+    return {
+      winRate,
+      avgProfitPerSale,
+      avgCostPerPurchase,
+      roi,
+      breakevenRatio
+    };
+  }
+
+  function calculateComparativeMetrics(transactions, allSpending) {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthNum = now.getMonth();
+
+    // Current month spending
+    const currentMonthTransactions = allSpending.filter(t =>
+      t.date && t.date.getFullYear() === currentYear && t.date.getMonth() === currentMonthNum
+    );
+    const currentMonth = currentMonthTransactions.reduce((sum, t) => sum + t.total, 0);
+
+    // Previous month spending
+    const prevMonthNum = currentMonthNum === 0 ? 11 : currentMonthNum - 1;
+    const prevYear = currentMonthNum === 0 ? currentYear - 1 : currentYear;
+    const prevMonthTransactions = allSpending.filter(t =>
+      t.date && t.date.getFullYear() === prevYear && t.date.getMonth() === prevMonthNum
+    );
+    const previousMonth = prevMonthTransactions.reduce((sum, t) => sum + t.total, 0);
+
+    // MoM change
+    const momChange = previousMonth > 0
+      ? ((currentMonth - previousMonth) / previousMonth) * 100
+      : 0;
+
+    // 30-day moving average
+    const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+    const last30DaysTransactions = allSpending.filter(t => t.date && t.date >= thirtyDaysAgo);
+    const thirtyDayTotal = last30DaysTransactions.reduce((sum, t) => sum + t.total, 0);
+    const thirtyDayAvg = thirtyDayTotal / 30;
+
+    // YoY growth (same month last year vs this year)
+    const lastYearSameMonth = allSpending.filter(t =>
+      t.date && t.date.getFullYear() === currentYear - 1 && t.date.getMonth() === currentMonthNum
+    );
+    const lastYearSameMonthTotal = lastYearSameMonth.reduce((sum, t) => sum + t.total, 0);
+    const yoyGrowth = lastYearSameMonthTotal > 0
+      ? ((currentMonth - lastYearSameMonthTotal) / lastYearSameMonthTotal) * 100
+      : 0;
+
+    // Projected annual (based on year-to-date average)
+    const yearToDateTransactions = allSpending.filter(t =>
+      t.date && t.date.getFullYear() === currentYear
+    );
+    const yearToDateTotal = yearToDateTransactions.reduce((sum, t) => sum + t.total, 0);
+    const monthsElapsed = currentMonthNum + 1;
+    const avgPerMonth = monthsElapsed > 0 ? yearToDateTotal / monthsElapsed : 0;
+    const projectedAnnual = avgPerMonth * 12;
+
+    return {
+      currentMonth,
+      previousMonth,
+      momChange,
+      thirtyDayAvg,
+      yoyGrowth,
+      projectedAnnual
+    };
+  }
+
+  function calculateGameProfitBreakdown(transactions, gamePurchases, inGamePurchases, marketSales, marketPurchases) {
+    const gameProfit = new Map();
+
+    // Track game purchases
+    gamePurchases.forEach(t => {
+      const gameName = t.gameName || 'Unknown';
+      if (!gameProfit.has(gameName)) {
+        gameProfit.set(gameName, {
+          gameName,
+          totalSpent: 0,
+          marketEarned: 0,
+          marketSpent: 0,
+          netProfit: 0,
+          roi: 0,
+          transactionCount: 0
+        });
+      }
+      const game = gameProfit.get(gameName);
+      game.totalSpent += t.total;
+      game.transactionCount++;
+    });
+
+    // Track in-game purchases
+    inGamePurchases.forEach(t => {
+      const gameName = t.gameName || 'Unknown';
+      if (!gameProfit.has(gameName)) {
+        gameProfit.set(gameName, {
+          gameName,
+          totalSpent: 0,
+          marketEarned: 0,
+          marketSpent: 0,
+          netProfit: 0,
+          roi: 0,
+          transactionCount: 0
+        });
+      }
+      const game = gameProfit.get(gameName);
+      game.totalSpent += t.total;
+      game.transactionCount++;
+    });
+
+    // Track market sales (earned from selling items)
+    marketSales.forEach(t => {
+      const gameName = t.gameName || 'Market Items';
+      if (!gameProfit.has(gameName)) {
+        gameProfit.set(gameName, {
+          gameName,
+          totalSpent: 0,
+          marketEarned: 0,
+          marketSpent: 0,
+          netProfit: 0,
+          roi: 0,
+          transactionCount: 0
+        });
+      }
+      const game = gameProfit.get(gameName);
+      game.marketEarned += Math.abs(t.walletChange);
+      game.transactionCount++;
+    });
+
+    // Track market purchases
+    marketPurchases.forEach(t => {
+      const gameName = t.gameName || 'Market Items';
+      if (!gameProfit.has(gameName)) {
+        gameProfit.set(gameName, {
+          gameName,
+          totalSpent: 0,
+          marketEarned: 0,
+          marketSpent: 0,
+          netProfit: 0,
+          roi: 0,
+          transactionCount: 0
+        });
+      }
+      const game = gameProfit.get(gameName);
+      game.marketSpent += t.total;
+      game.transactionCount++;
+    });
+
+    // Calculate net profit and ROI for each game
+    gameProfit.forEach((game, gameName) => {
+      game.netProfit = game.marketEarned - (game.totalSpent + game.marketSpent);
+      game.roi = game.totalSpent > 0
+        ? (game.netProfit / game.totalSpent) * 100
+        : 0;
+    });
+
+    // Convert to array and sort by ROI descending
+    return Array.from(gameProfit.values())
+      .sort((a, b) => b.roi - a.roi);
+  }
+
+  function buildTimeSeriesData(transactions, allSpending, marketSales, marketPurchases) {
+    const monthlyData = {};
+    const yearlyData = {};
+
+    // Build spending data
+    allSpending.forEach(t => {
+      if (t.date) {
+        const monthKey = `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, '0')}`;
+        const yearKey = t.date.getFullYear().toString();
+
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = { spent: 0, earned: 0, profit: 0 };
+        }
+        if (!yearlyData[yearKey]) {
+          yearlyData[yearKey] = { spent: 0, earned: 0, profit: 0 };
+        }
+
+        monthlyData[monthKey].spent += t.total;
+        yearlyData[yearKey].spent += t.total;
+      }
+    });
+
+    // Build earnings data
+    marketSales.forEach(t => {
+      if (t.date) {
+        const monthKey = `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, '0')}`;
+        const yearKey = t.date.getFullYear().toString();
+
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = { spent: 0, earned: 0, profit: 0 };
+        }
+        if (!yearlyData[yearKey]) {
+          yearlyData[yearKey] = { spent: 0, earned: 0, profit: 0 };
+        }
+
+        const earned = Math.abs(t.walletChange);
+        monthlyData[monthKey].earned += earned;
+        yearlyData[yearKey].earned += earned;
+      }
+    });
+
+    // Calculate profit
+    Object.keys(monthlyData).forEach(key => {
+      monthlyData[key].profit = monthlyData[key].earned - monthlyData[key].spent;
+    });
+    Object.keys(yearlyData).forEach(key => {
+      yearlyData[key].profit = yearlyData[key].earned - yearlyData[key].spent;
+    });
+
+    return { monthly: monthlyData, yearly: yearlyData };
   }
 
   function formatPeakMonth(monthStr) {
@@ -519,6 +779,56 @@
     document.getElementById('ssi-purchaseFrequency').textContent = stats.avgDaysBetweenPurchases > 0
       ? `Every ${stats.avgDaysBetweenPurchases} days`
       : '-';
+
+    // Profit analytics metrics
+    if (stats.profitMetrics) {
+      const pm = stats.profitMetrics;
+      const roiEl = document.getElementById('ssi-marketROI');
+      if (roiEl) {
+        roiEl.textContent = pm.roi.toFixed(2) + '%';
+        roiEl.className = 'ssi-stat-value' + (pm.roi >= 0 ? ' positive' : ' negative');
+      }
+
+      const winRateEl = document.getElementById('ssi-winRate');
+      if (winRateEl) winRateEl.textContent = pm.winRate.toFixed(1) + '%';
+
+      const avgProfitEl = document.getElementById('ssi-avgProfitPerSale');
+      if (avgProfitEl) avgProfitEl.textContent = formatCurrency(pm.avgProfitPerSale, c);
+
+      const avgCostEl = document.getElementById('ssi-avgCostPerPurchase');
+      if (avgCostEl) avgCostEl.textContent = formatCurrency(pm.avgCostPerPurchase, c);
+
+      const breakevenEl = document.getElementById('ssi-breakevenRatio');
+      if (breakevenEl) breakevenEl.textContent = pm.breakevenRatio.toFixed(2) + 'x';
+    }
+
+    // Comparative metrics
+    if (stats.comparativeMetrics) {
+      const cm = stats.comparativeMetrics;
+      const currentMonthEl = document.getElementById('ssi-currentMonthSpending');
+      if (currentMonthEl) currentMonthEl.textContent = formatCurrency(cm.currentMonth, c);
+
+      const momChangeEl = document.getElementById('ssi-momChange');
+      if (momChangeEl) {
+        const arrow = cm.momChange > 0 ? '↑' : cm.momChange < 0 ? '↓' : '→';
+        const sign = cm.momChange > 0 ? '+' : '';
+        momChangeEl.textContent = `${arrow} ${sign}${cm.momChange.toFixed(1)}% vs last month`;
+        momChangeEl.className = 'ssi-stat-subtitle' + (cm.momChange > 0 ? ' negative' : ' positive');
+      }
+
+      const thirtyDayEl = document.getElementById('ssi-thirtyDayAvg');
+      if (thirtyDayEl) thirtyDayEl.textContent = formatCurrency(cm.thirtyDayAvg, c);
+
+      const yoyEl = document.getElementById('ssi-yoyGrowth');
+      if (yoyEl) {
+        const sign = cm.yoyGrowth > 0 ? '+' : '';
+        yoyEl.textContent = `${sign}${cm.yoyGrowth.toFixed(1)}%`;
+        yoyEl.className = 'ssi-stat-value' + (cm.yoyGrowth > 0 ? ' negative' : ' positive');
+      }
+
+      const projectedEl = document.getElementById('ssi-projectedAnnual');
+      if (projectedEl) projectedEl.textContent = formatCurrency(cm.projectedAnnual, c);
+    }
   }
 
   // ============================================
@@ -838,6 +1148,12 @@
 
     // Top purchases
     renderTopPurchases('ssi-top-purchases', allSpending, currency);
+
+    // Game profit breakdown
+    const stats = calculateStats(transactions);
+    if (stats.gameProfitData) {
+      renderGameProfitBreakdown('ssi-game-profit-breakdown', stats.gameProfitData, currency);
+    }
   }
 
   function renderBreakdown(elementId, data, currency, sortByKey = false) {
@@ -882,6 +1198,49 @@
         <span class="ssi-breakdown-count">${formatDate(t.date)}</span>
       </div>
     `).join('');
+  }
+
+  function renderGameProfitBreakdown(elementId, gameProfitData, currency) {
+    const container = document.getElementById(elementId);
+    if (!container) return;
+
+    if (!gameProfitData || gameProfitData.length === 0) {
+      container.innerHTML = '<p class="ssi-no-data">No game profit data available</p>';
+      return;
+    }
+
+    let html = `
+      <table class="ssi-profit-table">
+        <thead>
+          <tr>
+            <th>Game</th>
+            <th>Spent</th>
+            <th>Earned</th>
+            <th>Net Profit</th>
+            <th>ROI</th>
+            <th>Transactions</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    gameProfitData.slice(0, 20).forEach(game => {
+      const profitClass = game.netProfit >= 0 ? 'positive' : 'negative';
+      const roiClass = game.roi >= 0 ? 'positive' : 'negative';
+      html += `
+        <tr>
+          <td class="game-name">${game.gameName}</td>
+          <td>${formatCurrency(game.totalSpent, currency)}</td>
+          <td>${formatCurrency(game.marketEarned, currency)}</td>
+          <td class="${profitClass}">${formatCurrency(game.netProfit, currency)}</td>
+          <td class="${roiClass}">${game.roi.toFixed(1)}%</td>
+          <td>${game.transactionCount}</td>
+        </tr>
+      `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
   }
 
   // ============================================
@@ -1055,6 +1414,65 @@
             </div>
           </div>
 
+          <!-- Advanced Profit Analytics Section -->
+          <div class="ssi-stats-section ssi-profit-section full-width">
+            <h3 class="ssi-section-title">
+              <span class="ssi-section-icon">💰</span>
+              Advanced Profit Analytics
+            </h3>
+
+            <!-- ROI Metrics Grid -->
+            <div class="ssi-stats-grid compact">
+              <div class="ssi-stat-card highlight">
+                <span class="ssi-stat-label">Market ROI</span>
+                <span class="ssi-stat-value" id="ssi-marketROI">-</span>
+                <span class="ssi-stat-subtitle">Return on Investment</span>
+              </div>
+              <div class="ssi-stat-card">
+                <span class="ssi-stat-label">Win Rate</span>
+                <span class="ssi-stat-value" id="ssi-winRate">-</span>
+                <span class="ssi-stat-subtitle">Profitable transactions</span>
+              </div>
+              <div class="ssi-stat-card">
+                <span class="ssi-stat-label">Avg Profit/Sale</span>
+                <span class="ssi-stat-value positive" id="ssi-avgProfitPerSale">-</span>
+              </div>
+              <div class="ssi-stat-card">
+                <span class="ssi-stat-label">Avg Cost/Purchase</span>
+                <span class="ssi-stat-value" id="ssi-avgCostPerPurchase">-</span>
+              </div>
+              <div class="ssi-stat-card">
+                <span class="ssi-stat-label">Breakeven Ratio</span>
+                <span class="ssi-stat-value" id="ssi-breakevenRatio">-</span>
+                <span class="ssi-stat-subtitle">Earn per €1 spent</span>
+              </div>
+            </div>
+
+            <!-- Comparative Analytics Grid -->
+            <h4 class="ssi-subsection-title">Trend Analysis</h4>
+            <div class="ssi-stats-grid compact">
+              <div class="ssi-stat-card">
+                <span class="ssi-stat-label">This Month</span>
+                <span class="ssi-stat-value" id="ssi-currentMonthSpending">-</span>
+                <span class="ssi-stat-subtitle" id="ssi-momChange">-</span>
+              </div>
+              <div class="ssi-stat-card">
+                <span class="ssi-stat-label">30-Day Avg</span>
+                <span class="ssi-stat-value" id="ssi-thirtyDayAvg">-</span>
+              </div>
+              <div class="ssi-stat-card">
+                <span class="ssi-stat-label">YoY Growth</span>
+                <span class="ssi-stat-value" id="ssi-yoyGrowth">-</span>
+                <span class="ssi-stat-subtitle">vs same period last year</span>
+              </div>
+              <div class="ssi-stat-card highlight">
+                <span class="ssi-stat-label">Projected Annual</span>
+                <span class="ssi-stat-value" id="ssi-projectedAnnual">-</span>
+                <span class="ssi-stat-subtitle">Based on current trends</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Purchase Analytics -->
           <div class="ssi-stats-section">
             <h3 class="ssi-section-title">
@@ -1203,6 +1621,14 @@
               <span class="ssi-breakdown-toggle">▼</span>
             </div>
             <div class="ssi-breakdown-content" id="ssi-top-purchases"></div>
+          </div>
+
+          <div class="ssi-breakdown">
+            <div class="ssi-breakdown-header" data-target="ssi-game-profit-breakdown">
+              <h3 class="ssi-breakdown-title">💎 Game Profitability Analysis</h3>
+              <span class="ssi-breakdown-toggle">▼</span>
+            </div>
+            <div class="ssi-breakdown-content" id="ssi-game-profit-breakdown"></div>
           </div>
         </div>
       </div>

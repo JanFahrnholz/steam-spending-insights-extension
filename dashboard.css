@@ -766,3 +766,88 @@
 .ssi-notice strong {
   color: #66c0f4;
 }
+
+/* Profit Analytics Section */
+.ssi-profit-section {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(91, 163, 43, 0.1) 0%, rgba(42, 71, 94, 0.2) 100%);
+  border-color: rgba(91, 163, 43, 0.3);
+}
+
+.ssi-stats-section.full-width {
+  grid-column: span 2;
+}
+
+.ssi-subsection-title {
+  font-size: 12px;
+  color: #8f98a0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 15px 0 10px 0;
+  padding-top: 15px;
+  border-top: 1px solid rgba(42, 71, 94, 0.3);
+}
+
+/* Game Profit Table */
+.ssi-profit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ssi-profit-table th {
+  text-align: left;
+  padding: 10px;
+  background: rgba(42, 71, 94, 0.3);
+  color: #c6d4df;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(102, 192, 244, 0.3);
+}
+
+.ssi-profit-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(42, 71, 94, 0.2);
+}
+
+.ssi-profit-table tbody tr:hover {
+  background: rgba(42, 71, 94, 0.2);
+}
+
+.ssi-profit-table .game-name {
+  font-weight: 500;
+  color: #c6d4df;
+}
+
+/* Half-width charts */
+.ssi-chart-container.half {
+  width: calc(50% - 10px);
+  display: inline-block;
+  vertical-align: top;
+  margin-right: 20px;
+}
+
+.ssi-chart-container.half:last-child {
+  margin-right: 0;
+}
+
+/* No data message */
+.ssi-no-data {
+  text-align: center;
+  padding: 20px;
+  color: #8f98a0;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .ssi-stats-section.full-width {
+    grid-column: span 1;
+  }
+
+  .ssi-chart-container.half {
+    width: 100%;
+    display: block;
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+}
